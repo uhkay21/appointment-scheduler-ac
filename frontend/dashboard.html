@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Dashboard | Appointment Scheduler</title>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 font-sans">
+    <div x-data="dashboard()">
+        <!-- Header -->
+        <header class="bg-indigo-600 shadow-md">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center py-4">
+                    <div class="flex items-center">
+                        <h1 class="text-white text-xl font-semibold">AppointEase</h1>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div class="relative" x-data="{ isOpen: false }">
+                            <button
+                                @click="isOpen = !isOpen"
+                                class="flex items-center text-sm text-white focus:outline-none"
+                                aria-expanded="false"
+                            >
+                                <span class="mr-2">Acme Hair Salon</span>
+                                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </button>
+                            <div
+                                x-show="isOpen"
+                                @click.away="isOpen = false"
+                                class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1"
+                                x-transition:enter="transition ease-out duration-100"
+                                x-transition:enter-start="transform opacity-0 scale-95"
+                                x-transition:enter-end="transform opacity-100 scale-100"
+                                x-transition:leave="transition ease-in duration-75"
+                                x-transition:leave-start="transform opacity-100 scale-100"
+                                x-transition:leave-end="transform opacity-0 scale-95"
+                            >
+                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Your Profile</a>
+                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Settings</a>
+                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Sign out</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Dashboard Header -->
+            <div class="md:flex md:items-center md:justify-between mb-6">
+                <div class="flex-1 min-w-0">
+                    <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
+                        Dashboard
+                    </h2>
+                </div>
+                <div class="mt-4 flex md:mt-0 md:ml-4">
+                    <button
+                        type="button"
+                        class="ml-3 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    >
+                        <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                        Add Appointment
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filter and Date Navigation -->
+            <div class="bg-white rounded-lg shadow mb-6">
+                <div class="px-4 py-5 border-b border-gray-200 sm:px-6">
+                    <div class="md:flex md:items-center md:justify-between">
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center">
+                                <button
+                                    @click="previousDay"
+                                    class="p-1 rounded-full text-indigo-600 hover:bg-indigo-100 focus:outline-none"
+                                >
+                                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                                    </svg>
+                                </button>
+                                <h3 class="mx-4 text-lg font-medium leading-6 text-gray-900" x-text="formattedSelectedDate"></h3>
+                                <button
+                                    @click="nextDay"
+                                    class="p-1 rounded-full text-indigo-600 hover:bg-indigo-100 focus:outline-none"
+                                >
+                                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex md:mt-0">
+                            <div class="relative">
+                                <select
+                                    x-model="selectedFilter"
+                                    class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                                >
+                                    <option value="all">All Appointments</option>
+                                    <option value="upcoming">Upcoming</option>
+                                    <option value="completed">Completed</option>
+                                    <option value="cancelled">Cancelled</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 mb-6">
+                <!-- Total Appointments Card -->
+                <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="px-4 py-5 sm:p-6">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">
+                                Total Appointments Today
+                            </dt>
+                            <dd class="mt-1 text-3xl font-semibold text-indigo-600" x-text="todayStats.total"></dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <!-- Upcoming Appointments Card -->
+                <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="px-4 py-5 sm:p-6">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">
+                                Upcoming Appointments
+                            </dt>
+                            <dd class="mt-1 text-3xl font-semibold text-green-600" x-text="todayStats.upcoming"></dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <!-- Cancellations Card -->
+                <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="px-4 py-5 sm:p-6">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">
+                                Cancellations
+                            </dt>
+                            <dd class="mt-1 text-3xl font-semibold text-red-600" x-text="todayStats.cancelled"></dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Appointment List -->
+            <div class="bg-white shadow overflow-hidden sm:rounded-md">
+                <ul class="divide-y divide-gray-200">
+                    <template x-for="appointment in filteredAppointments" :key="appointment.id">
+                        <li>
+                            <div class="px-4 py-4 sm:px-6 hover:bg-gray-50">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center">
+                                        <div class="min-w-0 flex-1 px-4">
+                                            <div>
+                                                <p class="text-sm font-medium text-indigo-600 truncate" x-text="appointment.clientName"></p>
+                                                <p class="mt-1 flex items-center text-sm text-gray-500">
+                                                    <span x-text="appointment.service"></span>
+                                                    <span class="mx-1">•</span>
+                                                    <span x-text="formatPrice(appointment.price)"></span>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <div class="mr-4 flex flex-col items-end">
+                                            <p class="text-sm text-gray-900" x-text="formatTime(appointment.startTime)"></p>
+                                            <p class="text-sm text-gray-500" x-text="`${appointment.duration} min`"></p>
+                                        </div>
+                                        <div>
+                                            <span
+                                                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+                                                :class="{
+                                                    'bg-green-100 text-green-800': appointment.status === 'confirmed',
+                                                    'bg-yellow-100 text-yellow-800': appointment.status === 'pending',
+                                                    'bg-red-100 text-red-800': appointment.status === 'cancelled',
+                                                    'bg-gray-100 text-gray-800': appointment.status === 'completed'
+                                                }"
+                                                x-text="appointment.status"
+                                            ></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-2 sm:flex sm:justify-between">
+                                    <div class="sm:flex">
+                                        <p class="flex items-center text-sm text-gray-500">
+                                            <svg class="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                                            </svg>
+                                            <span x-text="appointment.clientEmail"></span>
+                                        </p>
+                                        <p class="mt-2 flex items-center text-sm text-gray-500 sm:mt-0 sm:ml-6">
+                                            <svg class="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                                            </svg>
+                                            <span x-text="appointment.clientPhone"></span>
+                                        </p>
+                                    </div>
+                                    <div class="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
+                                        <div class="flex space-x-2">
+                                            <button
+                                                class="inline-flex items-center px-3 py-1 border border-transparent text-xs leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:border-indigo-700 focus:ring-indigo-500"
+                                                @click="editAppointment(appointment.id)"
+                                            >
+                                                Edit
+                                            </button>
+                                            <button
+                                                class="inline-flex items-center px-3 py-1 border border-gray-300 text-xs leading-4 font-medium rounded-md text-gray-700 bg-white hover:text-gray-500 focus:outline-none focus:border-blue-300 focus:ring-blue-500"
+                                                @click="cancelAppointment(appointment.id)"
+                                                x-show="appointment.status !== 'cancelled' && appointment.status !== 'completed'"
+                                            >
+                                                Cancel
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                    </template>
+                    <!-- Empty state when no appointments -->
+                    <template x-if="filteredAppointments.length === 0">
+                        <li class="px-4 py-12 text-center">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                            <h3 class="mt-2 text-sm font-medium text-gray-900">No appointments found</h3>
+                            <p class="mt-1 text-sm text-gray-500">Get started by creating a new appointment.</p>
+                            <div class="mt-6">
+                                <button type="button" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                    <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                    </svg>
+                                    New Appointment
+                                </button>
+                            </div>
+                        </li>
+                    </template>
+                </ul>
+            </div>
+        </main>
+    </div>
+
+    <!-- Alpine.js Script -->
+    <script>
+        function dashboard() {
+            return {
+                // Selected date
+                selectedDate: new Date(),
+                selectedFilter: 'all',
+
+                // Appointment data (placeholder)
+                appointments: [
+                    {
+                        id: 1,
+                        clientName: 'Jane Smith',
+                        clientEmail: 'jane.smith@example.com',
+                        clientPhone: '(555) 123-4567',
+                        service: 'Haircut & Style',
+                        price: 65.00,
+                        startTime: new Date(new Date().setHours(9, 0, 0, 0)),
+                        duration: 45,
+                        status: 'confirmed',
+                        notes: 'Regular client, prefers minimal layers'
+                    },
+                    {
+                        id: 2,
+                        clientName: 'John Doe',
+                        clientEmail: 'john.doe@example.com',
+                        clientPhone: '(555) 987-6543',
+                        service: 'Men\'s Trim',
+                        price: 35.00,
+                        startTime: new Date(new Date().setHours(10, 0, 0, 0)),
+                        duration: 30,
+                        status: 'confirmed',
+                        notes: 'First-time client'
+                    },
+                    {
+                        id: 3,
+                        clientName: 'Sarah Johnson',
+                        clientEmail: 'sarah.j@example.com',
+                        clientPhone: '(555) 345-6789',
+                        service: 'Color & Highlights',
+                        price: 150.00,
+                        startTime: new Date(new Date().setHours(11, 0, 0, 0)),
+                        duration: 120,
+                        status: 'cancelled',
+                        notes: 'Allergic to certain hair dyes'
+                    },
+                    {
+                        id: 4,
+                        clientName: 'Michael Wilson',
+                        clientEmail: 'mwilson@example.com',
+                        clientPhone: '(555) 567-8901',
+                        service: 'Beard Trim',
+                        price: 25.00,
+                        startTime: new Date(new Date().setHours(13, 0, 0, 0)),
+                        duration: 20,
+                        status: 'confirmed',
+                        notes: ''
+                    },
+                    {
+                        id: 5,
+                        clientName: 'Emily Brown',
+                        clientEmail: 'emily.b@example.com',
+                        clientPhone: '(555) 234-5678',
+                        service: 'Full Color',
+                        price: 120.00,
+                        startTime: new Date(new Date().setHours(14, 0, 0, 0)),
+                        duration: 90,
+                        status: 'pending',
+                        notes: 'Wants to discuss options first'
+                    },
+                    {
+                        id: 6,
+                        clientName: 'David Lee',
+                        clientEmail: 'david.lee@example.com',
+                        clientPhone: '(555) 876-5432',
+                        service: 'Men\'s Haircut',
+                        price: 40.00,
+                        startTime: new Date(new Date().setHours(15, 30, 0, 0)),
+                        duration: 30,
+                        status: 'completed',
+                        notes: 'Regular client, #2 on sides, scissor cut on top'
+                    }
+                ],
+
+                // Computed properties
+                get formattedSelectedDate() {
+                    return this.selectedDate.toLocaleDateString('en-US', {
+                        weekday: 'long',
+                        month: 'long',
+                        day: 'numeric',
+                        year: 'numeric'
+                    });
+                },
+
+                get filteredAppointments() {
+                    let appointments = this.appointments.filter(app => {
+                        const appDate = new Date(app.startTime);
+                        return appDate.toDateString() === this.selectedDate.toDateString();
+                    });
+
+                    // Apply status filter
+                    if (this.selectedFilter !== 'all') {
+                        appointments = appointments.filter(app => {
+                            if (this.selectedFilter === 'upcoming') {
+                                return app.status === 'confirmed' || app.status === 'pending';
+                            } else {
+                                return app.status === this.selectedFilter;
+                            }
+                        });
+                    }
+
+                    // Sort by time
+                    return appointments.sort((a, b) => a.startTime - b.startTime);
+                },
+
+                get todayStats() {
+                    const todayApps = this.appointments.filter(app => {
+                        const appDate = new Date(app.startTime);
+                        return appDate.toDateString() === this.selectedDate.toDateString();
+                    });
+
+                    return {
+                        total: todayApps.length,
+                        upcoming: todayApps.filter(app => app.status === 'confirmed' || app.status === 'pending').length,
+                        completed: todayApps.filter(app => app.status === 'completed').length,
+                        cancelled: todayApps.filter(app => app.status === 'cancelled').length
+                    };
+                },
+
+                // Methods
+                formatTime(date) {
+                    return new Date(date).toLocaleTimeString('en-US', {
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        hour12: true
+                    });
+                },
+
+                formatPrice(price) {
+                    return new Intl.NumberFormat('en-US', {
+                        style: 'currency',
+                        currency: 'USD'
+                    }).format(price);
+                },
+
+                nextDay() {
+                    const next = new Date(this.selectedDate);
+                    next.setDate(next.getDate() + 1);
+                    this.selectedDate = next;
+                },
+
+                previousDay() {
+                    const prev = new Date(this.selectedDate);
+                    prev.setDate(prev.getDate() - 1);
+                    this.selectedDate = prev;
+                },
+
+                editAppointment(id) {
+                    // Placeholder for edit functionality
+                    alert(`Edit appointment ${id}`);
+                },
+
+                cancelAppointment(id) {
+                    // Placeholder for cancel functionality
+                    if (confirm("Are you sure you want to cancel this appointment?")) {
+                        const index = this.appointments.findIndex(app => app.id === id);
+                        if (index !== -1) {
+                            this.appointments[index].status = 'cancelled';
+                        }
+                    }
+                }
+            };
+        }
+    </script>
+</body>
+</html>

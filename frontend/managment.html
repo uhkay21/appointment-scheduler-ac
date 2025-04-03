@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Business - Salon Scheduler</title>
+    <script src="https://unpkg.com/alpinejs" defer></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+    <div x-data="businessManagement()" class="min-h-screen">
+        <!-- Header -->
+        <header class="bg-white shadow-sm">
+            <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between h-16">
+                    <div class="flex items-center">
+                        <a href="index.html" class="text-xl font-semibold text-gray-800">
+                            Salon Scheduler
+                        </a>
+                    </div>
+                </div>
+            </nav>
+        </header>
+
+        <!-- Main Content -->
+        <main class="max-w-4xl mx-auto px-4 py-8">
+            <!-- Manage Services -->
+            <section class="mb-8">
+                <h2 class="text-2xl font-semibold mb-4">Manage Services</h2>
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <!-- Add Service Form -->
+                    <form @submit.prevent="addService" class="space-y-4 mb-6">
+                        <div class="grid gap-4 md:grid-cols-3">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Service Name</label>
+                                <input type="text" x-model="newService.name" required
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Price</label>
+                                <input type="number" x-model="newService.price" required
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Duration (min)</label>
+                                <input type="number" x-model="newService.duration" required
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                        </div>
+                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                            Add Service
+                        </button>
+                    </form>
+
+                    <!-- Service List -->
+                    <div>
+                        <template x-for="(service, index) in services" :key="service.id">
+                            <div class="flex justify-between items-center border-b py-2">
+                                <div>
+                                    <div class="font-medium" x-text="service.name"></div>
+                                    <div class="text-sm text-gray-600">
+                                        <span x-text="formatPrice(service.price)"></span> •
+                                        <span x-text="`${service.duration} min`"></span>
+                                    </div>
+                                </div>
+                                <div class="flex space-x-2">
+                                    <button @click="editService(index)"
+                                        class="px-3 py-1 text-sm bg-yellow-500 text-white rounded-md hover:bg-yellow-600">
+                                        Edit
+                                    </button>
+                                    <button @click="deleteService(index)"
+                                        class="px-3 py-1 text-sm bg-red-500 text-white rounded-md hover:bg-red-600">
+                                        Delete
+                                    </button>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Manage Availability -->
+            <section>
+                <h2 class="text-2xl font-semibold mb-4">Set Availability</h2>
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <template x-for="(day, index) in days" :key="index">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700" x-text="day.name"></label>
+                                <div class="flex space-x-2 mt-1">
+                                    <input type="time" x-model="day.start"
+                                        class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                    <input type="time" x-model="day.end"
+                                        class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                    <button @click="saveAvailability"
+                        class="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                        Save Availability
+                    </button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        function businessManagement() {
+            return {
+                // Services
+                services: [
+                    { id: 1, name: 'Haircut', price: 50, duration: 30 },
+                    { id: 2, name: 'Shave', price: 20, duration: 15 }
+                ],
+                newService: { name: '', price: '', duration: '' },
+
+                addService() {
+                    if (this.newService.name && this.newService.price && this.newService.duration) {
+                        this.services.push({
+                            id: Date.now(),
+                            ...this.newService
+                        });
+                        this.newService = { name: '', price: '', duration: '' };
+                    }
+                },
+
+                editService(index) {
+                    const service = this.services[index];
+                    this.newService = { ...service };
+                    this.services.splice(index, 1);
+                },
+
+                deleteService(index) {
+                    this.services.splice(index, 1);
+                },
+
+                formatPrice(price) {
+                    return new Intl.NumberFormat('en-US', {
+                        style: 'currency',
+                        currency: 'USD'
+                    }).format(price);
+                },
+
+                // Availability
+                days: [
+                    { name: 'Monday', start: '', end: '' },
+                    { name: 'Tuesday', start: '', end: '' },
+                    { name: 'Wednesday', start: '', end: '' },
+                    { name: 'Thursday', start: '', end: '' },
+                    { name: 'Friday', start: '', end: '' },
+                    { name: 'Saturday', start: '', end: '' },
+                    { name: 'Sunday', start: '', end: '' }
+                ],
+
+                saveAvailability() {
+                    console.log('Availability saved:', this.days);
+                    alert('Availability saved successfully!');
+                }
+            };
+        }
+    </script>
+</body>
+</html>
